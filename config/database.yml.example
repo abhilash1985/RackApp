@@ -1,0 +1,5 @@
+adapter: mysql2
+host: localhost
+database: ENV['db']
+user: ENV['user']
+password: ENV['pwd']
