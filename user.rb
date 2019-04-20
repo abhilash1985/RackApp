@@ -3,16 +3,26 @@ require 'rack/cache'
 # class User
 class User
   def call(env)
+    env['HTTP_ACCEPT'] = 'application/json'
     req = Rack::Request.new(env)
     result = req.get? ? User.users(req.params) : 'Only GET request allowed'
+    User.new.response(req, result)
+  end
+
+  def response(req, result)
     case req.path_info
     when /users/
-      [200, { 'Content-Type' => 'application/json' }, [result]]
+      [200, User.header_types, [result]]
     when '/'
-      [200, { 'Content-Type' => 'application/json' }, ['Goto /users to see all users']]
+      [200, User.header_types, ['Goto /users to see all users']]
     else
-      [404, { 'Content-Type' => 'application/json' }, ['Invalid URL']]
+      [404, User.header_types, ['Invalid URL']]
     end
+  end
+
+  def self.header_types
+    # { 'Content-Type' => 'application/json', 'ETag' => Digest::MD5.new.to_s }
+    { 'Content-Type' => 'application/json' }
   end
 
   def self.users(params)
@@ -30,10 +40,14 @@ class User
         use Rack::Auth::Basic, 'Authentication Required' do |username, password|
           username == 'user' && password == 'password'
         end
-        use Rack::Cache
-        use Rack::ConditionalGet
-        use Rack::ETag
 
+        path = Rack::Directory.new('').root
+        use Rack::Cache, metastore: "file:#{path}/cache/rack/meta",
+                         entitystore: "file:#{path}/cache/rack/body", verbose: true
+                         # allow_reload: false, allow_revalidate: false
+        use Rack::ETag
+        use Rack::ConditionalGet
+        
         map '/' do
           run User.new
         end

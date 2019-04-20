@@ -37,6 +37,10 @@ This basic rack application is used to search and return matching names of users
   curl http://localhost:3000/users -u user:password -X GET # returns all users
   curl http://localhost:3000/test -u user:password -X GET # returns Invalid Url
   curl http://localhost:3000/users -u user:password -X GET -d "name=abc" # returns users with name=abc
+
+  curl -i http://localhost:3000/users -u user:password -X GET
+  curl -i http://localhost:3000/users -u user:password -X GET -d "name=abc"
+  curl -i -H 'If-None-Match: "b4c2d4c067d904d5611bcaab1dd23e68"' http://localhost:3000/user -u user:password -X GET -d "name=abc"
 ```
 
 * TODO
